@@ -1,0 +1,9 @@
+Name,Category,Phone,Website,Address,Emails,Platform,Type,Timestamp,Notes
+"ABC Dental Clinic","Dentist","+91 98765 43210","https://abcdental.in","123 MG Road, Delhi","info@abcdental.in, contact@abcdental.in","google_maps","B2B/B2C","2026-01-21T01:00:00",""
+"XYZ Plumbing Services","Plumber","+91 87654 32109","https://xyzplumbing.com","456 Connaught Place, Delhi","sales@xyzplumbing.com","justdial","B2B/B2C","2026-01-21T01:01:00","Rating: 4.5"
+"TechSoft Solutions Pvt Ltd","IT Services","+91 11 4567 8901","https://techsoftsolutions.com","Sector 62, Noida","info@techsoftsolutions.com","indiamart","D2C/Supplier","2026-01-21T01:02:00","Price context: Contact for quote"
+"Sharma Electronics","Electronics Retailer","+91 99887 76655","https://sharmaelectronics.in","Lajpat Nagar, Delhi","Guessed: info@sharmaelectronics.in","sulekha","B2B/B2C","2026-01-21T01:03:00","Rating: 4.2"
+"Startup Hub India","Coworking Space","","https://startuphubindia.com","Bengaluru, Karnataka","hello@startuphubindia.com","youtube","B2B Signal","2026-01-21T01:04:00","Subscribers: 15.2K"
+"Fashion Forward Boutique","Fashion","","https://fashionforward.in","Mumbai","contact@fashionforward.in","instagram","B2C Signal","2026-01-21T01:05:00","Followers: 45K"
+"CloudWare Technologies","SaaS","","https://cloudware.io","","info@cloudware.io","naukri","B2B Signal (Hiring)","2026-01-21T01:06:00","Hiring for: Senior Backend Developer"
+"Acme Manufacturing Ltd","Manufacturing","+91 22 1234 5678","https://acmemfg.com","Pune, Maharashtra","sales@acmemfg.com, hr@acmemfg.com","yellow_pages","B2B/B2C","2026-01-21T01:07:00","Category: Industrial Supplies"
