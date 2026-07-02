@@ -97,9 +97,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
                 case 'CLEAR_LEADS':
                     await clearLeads();
-                    // Reset usage count in license manager
-                    licenseManager.usageCount = 0;
-                    await chrome.storage.local.set({ usageCount: 0 });
                     sendResponse({ success: true });
                     break;
 
