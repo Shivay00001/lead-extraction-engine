@@ -37,10 +37,19 @@ class JustdialExtractor {
 
             // Extract phone number from 'tel:' links or call buttons
             const phoneLink = item.querySelector('a[href^="tel:"]');
+            const dataHrefLink = item.querySelector('[data-href*="tel:"]');
+            const onClickLink = item.querySelector('[onclick*="tel:"]');
+            
             let phone = '';
             
             if (phoneLink) {
                 phone = phoneLink.href.replace('tel:', '').trim();
+            } else if (dataHrefLink) {
+                const match = dataHrefLink.getAttribute('data-href').match(/tel:([0-9+\s.-]+)/);
+                if (match) phone = match[1];
+            } else if (onClickLink) {
+                const match = onClickLink.getAttribute('onclick').match(/tel:([0-9+\s.-]+)/);
+                if (match) phone = match[1];
             } else {
                 // Fallback to text inside call buttons or contact info
                 const phoneEl = item.querySelector('.contact-info, .callcontent, .call_now, [class*="call"]');

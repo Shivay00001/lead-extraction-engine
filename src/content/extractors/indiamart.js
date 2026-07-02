@@ -34,17 +34,31 @@ class IndiaMartExtractor {
             const location = item.querySelector('.cloc, .location')?.innerText || '';
             const price = item.querySelector('.prc, .price')?.innerText || '';
 
+            // IndiaMART phone extraction
+            const phoneLink = item.querySelector('a[href^="tel:"]');
+            let phone = '';
+            if (phoneLink) {
+                phone = phoneLink.href.replace('tel:', '').trim();
+            } else {
+                const phoneEl = item.querySelector('.cpn, .pns_h, .boPN, [class*="phone"], [class*="mobile"]');
+                phone = phoneEl?.innerText?.trim() || '';
+            }
+
             if (!name) return null;
 
-            const raw = `${name}${location}`;
+            const raw = `${name}${phone}${location}`;
             const hash = btoa(unescape(encodeURIComponent(raw))).substring(0, 32);
 
             return {
                 name,
                 address: location,
+                phone,
+                emails: '',
+                category: '',
+                website: '',
                 notes: `Price context: ${price}`,
                 platform: 'indiamart',
-                type: 'D2C/Supplier',
+                type: 'B2B/Supplier',
                 timestamp: Date.now(),
                 hash
             };
