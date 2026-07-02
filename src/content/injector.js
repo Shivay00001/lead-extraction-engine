@@ -639,25 +639,52 @@ const extractFromElement = (item, selectors) => {
     try {
         const getText = (sel) => item.querySelector(sel)?.innerText?.trim() || '';
         const getAttr = (sel, attr) => item.querySelector(sel)?.[attr] || '';
-        
+
+        const decodeJustdialPhone = (element) => {
+            // Justdial classic icon font mapping
+            const iconMap = {
+                'icon-ji': '9', 'icon-lk': '8', 'icon-nm': '7', 'icon-po': '6',
+                'icon-rq': '5', 'icon-ts': '4', 'icon-vu': '3', 'icon-xw': '2',
+                'icon-yz': '1', 'icon-zy': '1', 'icon-acb': '0', 'icon-dc': '+',
+                'icon-fe': '(', 'icon-hg': ')', 'icon-ba': '-'
+            };
+            const icons = element.querySelectorAll('[class*="icon-"]');
+            let phone = '';
+            icons.forEach(icon => {
+                const cls = Array.from(icon.classList).find(c => c.startsWith('icon-'));
+                if (cls && iconMap[cls]) phone += iconMap[cls];
+            });
+            return phone;
+        };
+
         const getPhone = (sel) => {
+            // 1. Try Justdial Icon Font Decoder First
+            if (currentPlatform === 'justdial') {
+                const jdPhone = decodeJustdialPhone(item);
+                if (jdPhone && jdPhone.length >= 10) return jdPhone;
+            }
+
             const els = item.querySelectorAll(sel);
             for (const el of els) {
-                if (el.href && el.href.includes('tel:')) return el.href.replace('tel:', '');
-                
-                const dataHref = el.getAttribute('data-href');
-                if (dataHref && dataHref.includes('tel:')) return dataHref.replace('tel:', '');
-                
-                const onClick = el.getAttribute('onclick');
-                if (onClick && onClick.includes('tel:')) {
-                    const match = onClick.match(/tel:([0-9+\s.-]+)/);
-                    if (match) return match[1];
-                }
-                
+                // 2. Check explicitly for tel: in href or data-href or onclick
+                const html = el.outerHTML;
+                const telMatch = html.match(/tel:([0-9+\s.-]+)/);
+                if (telMatch) return telMatch[1].replace(/[^\d+]/g, '');
+
+                // 3. Try standard innerText
                 const text = el.innerText?.trim();
-                // Avoid returning garbage placeholder text
-                if (text && !text.toLowerCase().includes('check') && !text.toLowerCase().includes('view')) return text;
+                if (text && !text.toLowerCase().includes('check') && !text.toLowerCase().includes('view')) {
+                    const match = text.match(/(?:\+91[-.\s]?)?[0-9]{10,12}/);
+                    if (match) return match[0];
+                }
             }
+
+            // 4. Aggressive Fallback: Scan entire item's raw HTML for any 10-12 digit number
+            // (catches numbers hidden in JSON objects, data attributes, etc.)
+            const html = item.innerHTML;
+            const htmlMatch = html.match(/(?:\+91[-.\s]?)?[6-9]\d{9}/);
+            if (htmlMatch) return htmlMatch[0];
+
             return '';
         };
 
