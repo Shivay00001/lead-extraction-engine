@@ -625,8 +625,8 @@ const SELECTORS = {
 
     // ── Generic Fallback (works on ANY site) ──
     generic: {
-        items: '.listing-item, .business-card, .result-card, .listing-card, .company-card, .search-result, .directory-item, .provider-card, .profile-card, article, .entry, .item, li.result, div.result, .card, tr, [class*="listing"], [class*="result"]',
-        name: 'h2, h3, h4, h5, .name, .title, .company-name, .business-name, [class*="name"], [class*="title"], strong > a, h2 > a, h3 > a',
+        items: '.listing-item, .business-card, .result-card, .listing-card, .company-card, .biz-listing, .search-result, .directory-item, .provider-card, .profile-card, .member-card, .vendor-card, li.result, div.result, .card[data-business], .company-listing, .dealer-card, .dealer-item, .partner-card, .partner-item, .distributor-card, .reseller-card, .installer-card, [class*="dealer"], [class*="partner"], [class*="distributor"], [class*="reseller"], [class*="installer"], [class*="contractor"], .store-locator-result, .location-card, .locator-result, .franchise-card, .franchise-item, [class*="franchise"], .certified-company, .member-listing, .association-member, [class*="certified"], [class*="member"], [class*="accredited"], .exhibitor-card, .exhibitor-item, .sponsor-card, .sponsor-item, [class*="exhibitor"], [class*="sponsor"], .speaker-card, .portfolio-company, .portfolio-card, .cohort-company, [class*="portfolio"], [class*="startup"], [class*="alumni"], .customer-card, .client-card, .case-study-card, .showcase-item, [class*="customer"], [class*="client"], [class*="case-study"], [class*="powered-by"], [class*="integration"], .seller-card, .shop-card, .merchant-card, .store-card, [class*="seller"], [class*="merchant"], [class*="shop-item"], [class*="listing"], [class*="business-card"], [class*="company"], [class*="provider"], [class*="vendor"], article, .entry, .item, .card, tr',
+        name: 'h1, h2, h3, h4, h5, .name, .title, .company-name, .business-name, [class*="name"], [class*="title"], strong > a, h2 > a, h3 > a',
         phone: 'a[href^="tel:"], .phone, [class*="phone"], [class*="tel"]',
         address: '.address, [class*="address"], [class*="location"], .adr',
         website: 'a[href^="http"]',
@@ -746,14 +746,12 @@ const highlightElement = (el) => {
 
 const extractLeads = () => {
     const selectors = SELECTORS[currentPlatform] || SELECTORS['generic'];
-    if (!selectors) {
-        console.log('[LeadEngine] No selectors for platform:', currentPlatform);
-        return;
-    }
+    if (!selectors) return;
 
+    let leads = [];
+
+    // 1. Try standard card/list extraction
     const items = document.querySelectorAll(selectors.items);
-    const leads = [];
-
     items.forEach(item => {
         const lead = extractFromElement(item, selectors);
         if (lead && !extractedHashes.has(lead.hash)) {
@@ -762,6 +760,77 @@ const extractLeads = () => {
             highlightElement(item);
         }
     });
+
+    // 2. Fallback: Structured Data (JSON-LD)
+    if (leads.length === 0) {
+        try {
+            const scripts = document.querySelectorAll('script[type="application/ld+json"]');
+            scripts.forEach(script => {
+                try {
+                    const data = JSON.parse(script.textContent);
+                    const items = Array.isArray(data) ? data : [data];
+                    items.forEach(item => {
+                        const type = item['@type'];
+                        if (!type || (!type.includes('LocalBusiness') && !type.includes('Organization') && !type.includes('Person'))) return;
+                        
+                        const name = item.name;
+                        if (!name) return;
+
+                        const raw = `${name}${item.telephone || ''}`;
+                        const hash = btoa(unescape(encodeURIComponent(raw))).substring(0, 32);
+
+                        if (!extractedHashes.has(hash)) {
+                            leads.push({
+                                name,
+                                category: type,
+                                phone: item.telephone || '',
+                                address: item.address ? (typeof item.address === 'string' ? item.address : item.address.streetAddress || '') : '',
+                                website: item.url || '',
+                                rating: item.aggregateRating?.ratingValue || '',
+                                platform: currentPlatform,
+                                type: 'B2B/B2C',
+                                timestamp: Date.now(),
+                                hash
+                            });
+                            extractedHashes.add(hash);
+                        }
+                    });
+                } catch(e) {}
+            });
+        } catch(e) {}
+    }
+
+    // 3. Last Resort Fallback: Full Page Scan (emails & phones)
+    if (leads.length === 0) {
+        try {
+            const name = document.querySelector('h1')?.innerText?.trim() || document.title?.split(/[|\-]/)[0]?.trim() || '';
+            const telLinks = document.querySelectorAll('a[href^="tel:"]');
+            let phone = '';
+            if (telLinks.length > 0) {
+                phone = telLinks[0].href.replace('tel:', '').trim();
+            } else {
+                const bodyText = document.body?.innerText || '';
+                const phoneMatch = bodyText.match(/(?:\+?\d{1,4}[\s.-]?)?\(?\d{2,5}\)?[\s.-]?\d{2,5}[\s.-]?\d{2,5}[\s.-]?\d{0,5}/);
+                if (phoneMatch) {
+                    const digits = phoneMatch[0].replace(/\D/g, '');
+                    if (digits.length >= 7 && digits.length <= 15 && !(digits.length === 8 && (digits.startsWith('19') || digits.startsWith('20')))) {
+                        phone = phoneMatch[0];
+                    }
+                }
+            }
+
+            if (name && phone) {
+                const hash = btoa(unescape(encodeURIComponent(`${name}${phone}`))).substring(0, 32);
+                if (!extractedHashes.has(hash)) {
+                    leads.push({
+                        name, category: '', address: '', phone, website: window.location.href, rating: '',
+                        platform: currentPlatform, type: 'B2B/B2C', timestamp: Date.now(), hash
+                    });
+                    extractedHashes.add(hash);
+                }
+            }
+        } catch (e) {}
+    }
 
     if (leads.length > 0) {
         console.log(`[LeadEngine] Extracted ${leads.length} new leads`);
