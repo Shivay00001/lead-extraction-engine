@@ -363,14 +363,14 @@ const SELECTORS = {
         name: '.lng_cont_name, .jcn, .store-name, .resultbox_title_anchor',
         category: '.cont_fl_no, .resultbox_subtitle',
         address: '.cont_fl_addr, .address-info, .resultbox_address',
-        phone: '.contact-info, a[href^="tel:"], .resultbox_phone',
+        phone: '.contact-info, a[href^="tel:"], [data-href*="tel:"], [onclick*="tel:"], .resultbox_phone, .callcontent',
         rating: '.green-box, .rating, .resultbox_totalrate'
     },
     indiamart: {
         items: '.m-card, .lst_cl, .product-card, .card',
         name: '.company-name, .nme, .companyname, .lcname',
         address: '.cloc, .location, .lcity',
-        phone: 'a[href^="tel:"], .phn',
+        phone: 'a[href^="tel:"], .phn, .cpn, .pns_h, .boPN, [class*="mobile"], [class*="phone"]',
         notes: '.prc, .price'
     },
     tradeindia: {
@@ -639,6 +639,27 @@ const extractFromElement = (item, selectors) => {
     try {
         const getText = (sel) => item.querySelector(sel)?.innerText?.trim() || '';
         const getAttr = (sel, attr) => item.querySelector(sel)?.[attr] || '';
+        
+        const getPhone = (sel) => {
+            const els = item.querySelectorAll(sel);
+            for (const el of els) {
+                if (el.href && el.href.includes('tel:')) return el.href.replace('tel:', '');
+                
+                const dataHref = el.getAttribute('data-href');
+                if (dataHref && dataHref.includes('tel:')) return dataHref.replace('tel:', '');
+                
+                const onClick = el.getAttribute('onclick');
+                if (onClick && onClick.includes('tel:')) {
+                    const match = onClick.match(/tel:([0-9+\s.-]+)/);
+                    if (match) return match[1];
+                }
+                
+                const text = el.innerText?.trim();
+                // Avoid returning garbage placeholder text
+                if (text && !text.toLowerCase().includes('check') && !text.toLowerCase().includes('view')) return text;
+            }
+            return '';
+        };
 
         const name = getText(selectors.name);
         if (!name) return null;
@@ -647,7 +668,7 @@ const extractFromElement = (item, selectors) => {
             name,
             category: selectors.category ? getText(selectors.category) : '',
             address: selectors.address ? getText(selectors.address) : '',
-            phone: selectors.phone ? getText(selectors.phone) : '',
+            phone: selectors.phone ? getPhone(selectors.phone) : '',
             website: selectors.website ? getAttr(selectors.website, 'href') : '',
             rating: selectors.rating ? getText(selectors.rating) : '',
             notes: selectors.notes ? getText(selectors.notes) : '',
