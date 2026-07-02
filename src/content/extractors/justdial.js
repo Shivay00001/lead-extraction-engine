@@ -35,10 +35,17 @@ class JustdialExtractor {
             const category = item.querySelector('.cont_fl_no, .see-more')?.innerText || '';
             const address = item.querySelector('.cont_fl_addr, .ja-addr')?.innerText || '';
 
-            // Justdial often uses icon classes for phone numbers (digit sprites)
-            // This is a simplified extraction; real JD extraction often requires OCR or sprite mapping
-            // For now, we'll try to get text if available or fallback
-            const phone = item.querySelector('.contact-info')?.innerText || 'Check JD';
+            // Extract phone number from 'tel:' links or call buttons
+            const phoneLink = item.querySelector('a[href^="tel:"]');
+            let phone = '';
+            
+            if (phoneLink) {
+                phone = phoneLink.href.replace('tel:', '').trim();
+            } else {
+                // Fallback to text inside call buttons or contact info
+                const phoneEl = item.querySelector('.contact-info, .callcontent, .call_now, [class*="call"]');
+                phone = phoneEl?.innerText || '';
+            }
 
             if (!name) return null;
 
