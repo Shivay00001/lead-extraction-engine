@@ -68,15 +68,6 @@
                 "content/extractors/zillow.js"
             ],
             "run_at": "document_idle"
-        },
-        {
-            "matches": [
-                "<all_urls>"
-            ],
-            "js": [
-                "content/extractors/generic.js"
-            ],
-            "run_at": "document_idle"
         }
     ],
     "web_accessible_resources": [
