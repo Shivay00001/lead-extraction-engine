@@ -802,6 +802,35 @@ const showToast = (message, type = 'info') => {
     }, 3000);
 };
 
+const clickRevealButtons = () => {
+    let clickCount = 0;
+    // Look for generic reveal buttons
+    const buttons = document.querySelectorAll('button, a, span, div.contact-btn, div.boPN');
+    for (const btn of buttons) {
+        if (btn.hasAttribute('data-lead-clicked')) continue;
+        
+        const text = (btn.innerText || '').toLowerCase();
+        const classes = (btn.className || '').toLowerCase();
+        
+        // Match texts like 'view mobile', 'show number', etc. OR IndiaMART specific classes (.boPN)
+        if (
+            ((text.includes('view') || text.includes('show') || text.includes('click')) && 
+            (text.includes('number') || text.includes('mobile') || text.includes('phone') || text.includes('contact'))) ||
+            classes.includes('bopn') || classes.includes('view-number')
+        ) {
+            try {
+                btn.click();
+                btn.setAttribute('data-lead-clicked', 'true');
+                clickCount++;
+            } catch(e) {}
+        }
+    }
+    if (clickCount > 0) {
+        console.log(`[LeadEngine] Clicked ${clickCount} reveal buttons`);
+    }
+    return clickCount;
+};
+
 const startAutoScroll = () => {
     if (isAutoScrolling) return;
     isAutoScrolling = true;
@@ -810,7 +839,14 @@ const startAutoScroll = () => {
     const scroll = async () => {
         while (isAutoScrolling) {
             window.scrollTo(0, document.body.scrollHeight);
-            await new Promise(r => setTimeout(r, 2000 + Math.random() * 1000));
+            
+            // 1. Click reveal buttons (like IndiaMART's "View Mobile Number")
+            clickRevealButtons();
+            
+            // 2. Wait for AJAX/Network requests to bring the real numbers
+            await new Promise(r => setTimeout(r, 2500 + Math.random() * 1000));
+            
+            // 3. Now extract!
             extractLeads();
         }
     };
