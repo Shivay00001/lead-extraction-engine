@@ -674,16 +674,31 @@ const extractFromElement = (item, selectors) => {
                 // 3. Try standard innerText
                 const text = el.innerText?.trim();
                 if (text && !text.toLowerCase().includes('check') && !text.toLowerCase().includes('view')) {
-                    const match = text.match(/(?:\+91[-.\s]?)?[0-9]{10,12}/);
-                    if (match) return match[0];
+                    const digits = text.replace(/\D/g, '');
+                    // Valid phone number length anywhere in the world is 7-15
+                    if (digits.length >= 7 && digits.length <= 15) {
+                        return text;
+                    }
                 }
             }
 
-            // 4. Aggressive Fallback: Scan entire item's raw HTML for any 10-12 digit number
-            // (catches numbers hidden in JSON objects, data attributes, etc.)
+            // 4. Aggressive Fallback: Scan entire item's raw HTML
             const html = item.innerHTML;
-            const htmlMatch = html.match(/(?:\+91[-.\s]?)?[6-9]\d{9}/);
-            if (htmlMatch) return htmlMatch[0];
+            
+            // Indian standard
+            const inMatch = html.match(/(?:\+91[-.\s]?)?[6-9]\d{9}/);
+            if (inMatch) return inMatch[0];
+            
+            // US/Canada standard
+            const usMatch = html.match(/(?:\+?1[-.\s]?)?\(?[2-9]\d{2}\)?[-.\s]?[2-9]\d{2}[-.\s]?\d{4}/);
+            if (usMatch) return usMatch[0];
+            
+            // Global pattern
+            const intlMatch = html.match(/(?:\+?\d{1,4}[\s.-]?\(?\d{1,5}\)?[\s.-]?\d{1,5}[\s.-]?\d{1,5}[\s.-]?\d{0,5})/);
+            if (intlMatch) {
+                const digits = intlMatch[0].replace(/\D/g, '');
+                if (digits.length >= 7 && digits.length <= 15) return intlMatch[0];
+            }
 
             return '';
         };
