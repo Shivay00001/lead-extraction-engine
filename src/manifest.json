@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Lead Extraction Engine",
     "version": "1.0.0",
-    "description": "Professional B2B/B2C Lead Extraction Engine with hard monetization limits. Extract leads from Google Maps, Justdial, Sulekha, IndiaMART, Yelp, Yellow Pages, and more.",
+    "description": "Professional B2B/B2C Lead Extraction Engine. Extract leads from Google Maps, Justdial, LinkedIn, Yelp, and 200+ directories.",
     "permissions": [
         "storage",
         "unlimitedStorage",
