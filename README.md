@@ -104,3 +104,8 @@ lead-extraction-engine/
 - No login bypass
 - No CAPTCHA bypass
 - Public data only
+
+
+## Prerequisites
+- Required environment and dependencies
+
