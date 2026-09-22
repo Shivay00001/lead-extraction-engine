@@ -2,9 +2,9 @@
   "name": "lead-extraction-engine",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "backend/server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node backend/server.js"
   },
   "author": "Shivay00001",
   "license": "Custom"
